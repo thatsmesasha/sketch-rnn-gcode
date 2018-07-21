@@ -1,5 +1,5 @@
 var SerialPort = require('serialport')
-var serialport = new SerialPort('/dev/tty.wchusbserial1420')
+var serialport = new SerialPort(process.env.SKETCH_RNN_GCODE_PORT)
 const http = require('http')
 const port = 3000
 
