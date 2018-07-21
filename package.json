@@ -1,0 +1,26 @@
+{
+  "name": "sketch-rnn-gcode",
+  "version": "1.0.0",
+  "description": "Sketching together with AI on paper using any gcode printer.",
+  "main": "send.js",
+  "directories": {
+    "lib": "lib"
+  },
+  "dependencies": {
+    "serialport": "^6.2.2"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/emoilenne/sketch-rnn-gcode.git"
+  },
+  "author": "Oleksandra Fedorova",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/emoilenne/sketch-rnn-gcode/issues"
+  },
+  "homepage": "https://github.com/emoilenne/sketch-rnn-gcode#readme"
+}
