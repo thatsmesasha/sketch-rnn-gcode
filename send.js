@@ -1,5 +1,5 @@
 var SerialPort = require('serialport')
-var serialport = new SerialPort(process.env.SKETCH_RNN_GCODE_PORT)
+var serialport = new SerialPort(process.env.SKETCH_RNN_GCODE_PORT, 115200)
 const http = require('http')
 const port = 3000
 
@@ -12,6 +12,7 @@ var idle = true
 var drawnext = () => {
   var point = trajectory.shift()
   console.log('NEXT POINT =====> ' + point)
+  console.log('Left in queue: ' + trajectory.length)
   serialport.write(point + '\n')
   idle = false
 }

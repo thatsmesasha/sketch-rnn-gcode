@@ -290,10 +290,11 @@ var sketch = function( p ) {
 
   // UI
   var screen_width, screen_height, temperature_slider;
-  var line_width = 2.0;
+  var line_width = 10.0;
   var screen_scale_factor = 3.0;
 
   // dom
+  var canvas;
   var reset_button, model_sel, random_model_button;
   var ai_button, print_button;
   var text_title, text_temperature;
@@ -301,8 +302,23 @@ var sketch = function( p ) {
   var title_text;
 
   // drawing
-
   var trajectory;
+
+  // scaling coordinates
+  var canvas_width, canvas_height;
+
+  var leftx = 90;
+  var rightx = 177;
+
+  var upy = -115;
+  var downy = -273;
+
+  var topz = 34;
+  var bottomz = 85;
+
+  if (leftx == rightx || downy == upy) {
+    throw Error(`Invalid coordinates: leftx: ${leftx} rightx: ${rightx} upy: ${upy} downy: ${downy}`)
+  }
 
   var set_title_text = function(new_text) {
     title_text = new_text.split('_').join(' ');
@@ -362,6 +378,9 @@ var sketch = function( p ) {
     screen_width = p.windowWidth; //window.innerWidth
     screen_height = p.windowHeight; //window.innerHeight
 
+    canvas_width = screen_width;
+    canvas_height = screen_height - 100;
+
     // dom
 
     reset_button = p.createButton('clear drawing');
@@ -393,6 +412,12 @@ var sketch = function( p ) {
     // turns
     ai_turn = false;
     human_turn = true;
+
+    //canvas =
+    canvas = p.createCanvas(canvas_width, canvas_height);
+    canvas.canvas.style.borderBottom = '1px solid black'
+    console.log(canvas)
+
 
     // drawing
     strokes = [];
@@ -490,7 +515,6 @@ var sketch = function( p ) {
   p.setup = function() {
     init();
     restart();
-    p.createCanvas(screen_width, screen_height);
     p.frameRate(60);
     clear_screen();
     console.log('ready.');
@@ -632,15 +656,36 @@ var sketch = function( p ) {
     }
   }
 
+  var scalexy = function(x, y) {
+    var height = downy - upy
+    var width = rightx - leftx
+    var proportion = height / width
+
+
+    x = Math.max(Math.min(x, canvas_width), 0)
+    y = Math.max(Math.min(y, canvas_height), 0)
+
+    if (canvas_height / canvas_width > Math.abs(proportion)) {
+      //vertical
+      return { x: (leftx + rightx) / 2 - height / canvas_height * (x - canvas_width / 2),
+               y: upy + y * height / canvas_height}
+    } else {
+      // horizontal
+      return { x: leftx + x * width / canvas_width,
+               y: (downy + upy) / 2 - width / canvas_width * (y - canvas_height / 2)}
+    }
+  }
   var print_job = function() {
     var i;
     var prev_hand_pen_down = 1;
-    var hand_trajectory = ['G1 Z10', `G0 X${start_x} Y${start_y}`, 'G1 Z-10'];
+    var startpoint = scalexy(start_x, start_y)
+    var hand_trajectory = [`G1 Z${topz}`, `G0 X${startpoint.x} Y${startpoint.y}`, `G1 Z${bottomz}`];
     var x=start_x, y=start_y;
     var hand_dx, hand_dy, hand_pen_down, hand_pen_up;
     var justlifted = false
+    var point;
 
-    if (!trajectory) {
+    if (!trajectory.length) {
       return;
     }
 
@@ -653,18 +698,19 @@ var sketch = function( p ) {
       [hand_dx, hand_dy, hand_pen_down, hand_pen_up] = trajectory[i];
       x += hand_dx;
       y += hand_dy;
-      hand_trajectory.push(`${justlifted ? 'G0 ' : ''}X${x} Y${y}`);
+
+      point = scalexy(x, y)
+
+      hand_trajectory.push(`${justlifted ? 'G0 ' : ''}X${point.x} Y${point.y}`);
       justlifted = false
       if (prev_hand_pen_down == 0 && hand_pen_down == 1) {
-        hand_trajectory.push('G1 Z-10');
+        hand_trajectory.push(`G1 Z${bottomz}`);
       } else if (prev_hand_pen_down == 1 && hand_pen_up == 1) {
-        hand_trajectory.push('Z10');
+        hand_trajectory.push(`Z${topz}`);
         justlifted = true
       }
       prev_hand_pen_down = hand_pen_down;
     }
-
-    hand_trajectory.push(`X${start_x} Y${start_y}`)
 
     // console.log(trajectory)
     console.log(hand_trajectory.join('\n'))
