@@ -1,5 +1,7 @@
 var SerialPort = require('serialport')
-var serialport = new SerialPort(process.env.SKETCH_RNN_GCODE_PORT, 115200)
+var serialport = new SerialPort(process.env.SKETCH_RNN_GCODE_PORT, {
+  baudRate: 115200
+})
 const http = require('http')
 const port = 3000
 
@@ -19,9 +21,19 @@ var drawnext = () => {
 
 serialport.on('open', function() {
   console.log('Serial Port Opened')
+
+  setTimeout(() => {
+    serialport.write('$X\n')
+    serialport.write('$H\n')
+  }, 3000)
+
   parser.on('data', function(data) {
       data = data.toString('utf8')
-      if (data != 'ok') console.log('Board: ' + data)
+      console.log('Board: ' + data)
+      if (data == 'ok' && trajectory.length) {
+        drawnext()
+      }
+
 
       if (data.startsWith('<Idle')) {
         idle = true
@@ -39,14 +51,12 @@ var statusupdate = () => {
     if (idle && trajectory.length > 0) {
       drawnext()
     } else if (!idle) {
-      serialport.write('?\n')
+      serialport.write('$?\n')
     }
   }
-
-  loop()
 }
 
-statusupdate()
+// statusupdate()
 
 const requestHandler = (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -60,6 +70,7 @@ const requestHandler = (req, res) => {
     })
     req.on('end', () => {
       trajectory.push(...body.split('\n'))
+      drawnext()
       res.end('ok')
     })
     return

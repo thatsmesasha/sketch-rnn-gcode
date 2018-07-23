@@ -307,14 +307,16 @@ var sketch = function( p ) {
   // scaling coordinates
   var canvas_width, canvas_height;
 
-  var leftx = 90;
-  var rightx = 177;
+  var leftx = -325;
+  var rightx = -81;
 
-  var upy = -115;
-  var downy = -273;
+  var upy = -104;
+  var downy = -288;
 
-  var topz = 34;
-  var bottomz = 85;
+  var topz = -70;
+  var bottomz = -79;
+
+  var slidergcode = 'G1 Z-5'
 
   if (leftx == rightx || downy == upy) {
     throw Error(`Invalid coordinates: leftx: ${leftx} rightx: ${rightx} upy: ${upy} downy: ${downy}`)
@@ -378,28 +380,28 @@ var sketch = function( p ) {
     screen_width = p.windowWidth; //window.innerWidth
     screen_height = p.windowHeight; //window.innerHeight
 
-    canvas_width = screen_width;
-    canvas_height = screen_height - 100;
+    canvas_height = screen_height - 150;
+    canvas_width = Math.abs(canvas_height * (rightx - leftx) / (downy - upy));
 
     // dom
 
     reset_button = p.createButton('clear drawing');
-    reset_button.position(10, screen_height-27-27);
+    reset_button.position(screen_width * 0.3, screen_height-50);
     reset_button.mousePressed(reset_button_event); // attach button listener
 
     // ai drawing
     ai_button = p.createButton('ai turn');
-    ai_button.position(330, screen_height-27-27);
+    ai_button.position(screen_width * 0.4, screen_height-50);
     ai_button.mousePressed(ai_button_event); // attach button listener
 
     // printing
     print_button = p.createButton('print');
-    print_button.position(400, screen_height-27-27);
+    print_button.position(screen_width * 0.5, screen_height-50);
     print_button.mousePressed(print_button_event); // attach button listener
 
     // random model buttom
     random_model_button = p.createButton('random');
-    random_model_button.position(117, screen_height-27-27);
+    random_model_button.position(screen_width * 0.6, screen_height-50);
     random_model_button.mousePressed(random_model_button_event); // attach button listener
 
     // title
@@ -415,8 +417,9 @@ var sketch = function( p ) {
 
     //canvas =
     canvas = p.createCanvas(canvas_width, canvas_height);
-    canvas.canvas.style.borderBottom = '1px solid black'
-    console.log(canvas)
+    canvas.canvas.style.border = '1px solid black'
+    canvas.canvas.style.margin = '50px auto auto'
+    canvas.canvas.style.display = 'block'
 
 
     // drawing
@@ -504,6 +507,8 @@ var sketch = function( p ) {
     model_y = y;
     model_prev_pen = [0, 1, 0];
     model_is_active = false;
+
+    // send_to_server(slidergcode)
 
   };
 
@@ -679,10 +684,10 @@ var sketch = function( p ) {
     var i;
     var prev_hand_pen_down = 1;
     var startpoint = scalexy(start_x, start_y)
-    var hand_trajectory = [`G1 Z${topz}`, `G0 X${startpoint.x} Y${startpoint.y}`, `G1 Z${bottomz}`];
+    var hand_trajectory = [`G1 Z${topz} F1000`, `G0 X${startpoint.x} Y${startpoint.y}`, `G1 Z${bottomz} F1000`];
     var x=start_x, y=start_y;
     var hand_dx, hand_dy, hand_pen_down, hand_pen_up;
-    var justlifted = false
+    var lifted = false
     var point;
 
     if (!trajectory.length) {
@@ -701,20 +706,21 @@ var sketch = function( p ) {
 
       point = scalexy(x, y)
 
-      hand_trajectory.push(`${justlifted ? 'G0 ' : ''}X${point.x} Y${point.y}`);
-      justlifted = false
+      hand_trajectory.push(`G${lifted ? '0 ' : '1'} X${point.x} Y${point.y}${lifted ? '' : ' 500'}`)
       if (prev_hand_pen_down == 0 && hand_pen_down == 1) {
-        hand_trajectory.push(`G1 Z${bottomz}`);
+        hand_trajectory.push(`G1 Z${bottomz} F1000`);
+        lifted = false
       } else if (prev_hand_pen_down == 1 && hand_pen_up == 1) {
-        hand_trajectory.push(`Z${topz}`);
-        justlifted = true
+        hand_trajectory.push(`G1 Z${topz} F1000`);
+        lifted = true
       }
       prev_hand_pen_down = hand_pen_down;
     }
 
     // console.log(trajectory)
-    console.log(hand_trajectory.join('\n'))
-    send_to_server(hand_trajectory.join('\n'))
+    hand_trajectory = hand_trajectory.join('\n')
+    console.log(hand_trajectory)
+    send_to_server(hand_trajectory)
 
   }
 
