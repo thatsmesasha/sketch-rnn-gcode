@@ -301,12 +301,13 @@ var sketch = function( p ) {
 
   var title_text;
 
-  // drawing
-  var trajectory;
-
-  // scaling coordinates
   var canvas_width, canvas_height;
   var canvas_margin;
+
+  var started_printing;
+  var x_print, y_print;
+
+  // scaling coordinates
 
   var leftx = -325;
   var rightx = -81;
@@ -314,10 +315,11 @@ var sketch = function( p ) {
   var upy = -104;
   var downy = -288;
 
-  var topz = -65;
+  var abovetopz = -5;
+  var topz = -70;
   var bottomz = -79;
 
-  var slidergcode = 'G1 Z-5'
+  var slider_gcode = `G1 Z${abovetopz} F2000\nG0 X-342 Y-340\nG1 Z-61 F2000\nG1 X-72 F4000\nG1 X-342 F4000\nG1 Z${abovetopz} F2000`
 
   if (leftx == rightx || downy == upy) {
     throw Error(`Invalid coordinates: leftx: ${leftx} rightx: ${rightx} upy: ${upy} downy: ${downy}`)
@@ -413,10 +415,9 @@ var sketch = function( p ) {
     stylebutton(ai_button, '#91d832')
 
     // printing
-    print_button = p.createButton('print');
-    print_button.position(10, 10);
-    print_button.mousePressed(print_button_event); // attach button listener
-    // stylebutton(print_button, '#82BF56')
+    // print_button = p.createButton('print');
+    // print_button.position(10, 10);
+    // print_button.mousePressed(print_button_event); // attach button listener
 
     //canvas =
     canvas = p.createCanvas(canvas_width, canvas_height);
@@ -512,13 +513,15 @@ var sketch = function( p ) {
     raw_lines = [];
     current_raw_line = [];
     strokes = [];
-    trajectory = [];
     // start drawing from somewhere in middle of the canvas
-    x = screen_width/2.0;
-    y = screen_height/2.0;
+    x = canvas_width/2.0;
+    y = canvas_height/2.0;
     start_x = x;
     start_y = y;
+    x_print = start_x;
+    y_print = start_y;
     has_started = false;
+    started_printing = false;
 
     model_x = x;
     model_y = y;
@@ -559,6 +562,8 @@ var sketch = function( p ) {
         y = tracking.y;
         start_x = x;
         start_y = y;
+        x_print = x;
+        y_print = y;
         pen = 0;
       }
       var dx0 = tracking.x-x; // candidate for dx
@@ -610,7 +615,8 @@ var sketch = function( p ) {
 
           // redraw simplified strokes
           clear_screen();
-          trajectory.push(...stroke);
+          console.log(strokes, start_x, start_y)
+          print_job(stroke);
           draw_example(strokes, start_x, start_y, line_color);
 
           /*
@@ -631,34 +637,40 @@ var sketch = function( p ) {
 
       // have machine take over the drawing here:
       if (ai_turn) {
-        model_pen_down = model_prev_pen[0];
-        model_pen_up = model_prev_pen[1];
-        model_pen_end = model_prev_pen[2];
+        var trajectory = []
+        do {
 
-        model_state = model.update([model_dx, model_dy, model_pen_down, model_pen_up, model_pen_end], model_state);
-        model_pdf = model.get_pdf(model_state);
-        [model_dx, model_dy, model_pen_down, model_pen_up, model_pen_end] = model.sample(model_pdf, temperature);
-        trajectory.push([model_dx, model_dy, model_pen_down, model_pen_up, model_pen_end])
+          model_pen_down = model_prev_pen[0];
+          model_pen_up = model_prev_pen[1];
+          model_pen_end = model_prev_pen[2];
 
-        if (model_pen_end === 1) {
-          console.log('Done!')
-          ai_turn = false;
-          console.log(trajectory)
-        } else {
+          model_state = model.update([model_dx, model_dy, model_pen_down, model_pen_up, model_pen_end], model_state);
+          model_pdf = model.get_pdf(model_state);
+          [model_dx, model_dy, model_pen_down, model_pen_up, model_pen_end] = model.sample(model_pdf, temperature);
+          trajectory.push([model_dx, model_dy, model_pen_down, model_pen_up, model_pen_end])
 
-          if (model_prev_pen[0] === 1) {
+          if (model_pen_end === 1) {
+            console.log('Done!')
+            ai_turn = false;
+            console.log(trajectory)
+            print_job(trajectory)
+          } else {
 
-            // draw line connecting prev point to current point.
-            p.stroke(predict_line_color);
-            p.strokeWeight(line_width);
-            p.line(model_x, model_y, model_x+model_dx, model_y+model_dy);
+            // if (model_prev_pen[0] === 1) {
+            //
+            //   // draw line connecting prev point to current point.
+            //   p.stroke(predict_line_color);
+            //   p.strokeWeight(line_width);
+            //   p.line(model_x, model_y, model_x+model_dx, model_y+model_dy);
+            // }
+
+            model_prev_pen = [model_pen_down, model_pen_up, model_pen_end];
+
+            model_x += model_dx;
+            model_y += model_dy;
           }
 
-          model_prev_pen = [model_pen_down, model_pen_up, model_pen_end];
-
-          model_x += model_dx;
-          model_y += model_dy;
-        }
+        } while (model_pen_end !== 1)
 
       }
     }
@@ -697,19 +709,21 @@ var sketch = function( p ) {
                y: (downy + upy) / 2 - width / canvas_width * (y - canvas_height / 2)}
     }
   }
-  var print_job = function() {
+  var print_job = function(trajectory) {
     var i;
     var prev_hand_pen_down = 1;
-    var startpoint = scalexy(start_x, start_y)
-    var hand_trajectory = [`G1 Z${topz} F1000`, `G0 X${startpoint.x} Y${startpoint.y}`, `G1 Z${bottomz} F1000`];
-    var x=start_x, y=start_y;
+    var hand_trajectory = [`G1 Z${started_printing ? topz : abovetopz} F4000`];
     var hand_dx, hand_dy, hand_pen_down, hand_pen_up;
-    var lifted = false
+    var lifted = true
     var point;
 
     if (!trajectory.length) {
       return;
     }
+
+    console.log('pj', trajectory, x_print, y_print)
+
+    started_printing = true
 
     if (trajectory[trajectory.length - 1][4] == 1) {
       trajectory.pop()
@@ -718,17 +732,17 @@ var sketch = function( p ) {
 
     for (i=0; i<trajectory.length; i++) {
       [hand_dx, hand_dy, hand_pen_down, hand_pen_up] = trajectory[i];
-      x += hand_dx;
-      y += hand_dy;
+      x_print += hand_dx;
+      y_print += hand_dy;
 
-      point = scalexy(x, y)
+      point = scalexy(x_print, y_print)
 
-      hand_trajectory.push(`G${lifted ? '0 ' : '1'} X${point.x} Y${point.y}${lifted ? '' : ' F500'}`)
-      if (prev_hand_pen_down == 0 && hand_pen_down == 1) {
-        hand_trajectory.push(`G1 Z${bottomz} F1000`);
+      hand_trajectory.push(`G${lifted ? '0 ' : '1'} X${point.x} Y${point.y}${lifted ? '' : ' F4000'}`)
+      if (prev_hand_pen_down == 0 && hand_pen_down == 1 || i == 0) {
+        hand_trajectory.push(`G1 Z${bottomz} F4000`);
         lifted = false
       } else if (prev_hand_pen_down == 1 && hand_pen_up == 1) {
-        hand_trajectory.push(`G1 Z${topz} F1000`);
+        hand_trajectory.push(`G1 Z${topz} F4000`);
         lifted = true
       }
       prev_hand_pen_down = hand_pen_down;
@@ -774,6 +788,7 @@ var sketch = function( p ) {
   };
 
   var reset_button_event = function() {
+    send_to_server(slider_gcode)
     restart();
     clear_screen();
   };
@@ -793,7 +808,7 @@ var sketch = function( p ) {
   }
 
   var devicePressed = function(x, y) {
-    if (y < (screen_height-60)) {
+    if (y > 0 && y < canvas_height && x > 0 && x < canvas_width) {
       tracking.x = x;
       tracking.y = y;
       if (!tracking.down) {
