@@ -300,9 +300,12 @@ var sketch = function( p ) {
   var text_title, text_temperature;
 
   var title_text;
+  var google_title;
+  var sketchy_title;
+  var google_logo;
 
   var canvas_width, canvas_height;
-  var canvas_margin;
+  var canvas_margin_vertical, canvas_margin_horizontal;
 
   var started_printing;
   var x_print, y_print;
@@ -328,7 +331,7 @@ var sketch = function( p ) {
   var set_title_text = function(new_text) {
     title_text = new_text.split('_').join(' ');
     text_title.html(title_text);
-    text_title.position(220+canvas_margin + canvas_width/2 - new_text.length * 11, 0);
+    text_title.position(screen_width * 0.25 + canvas_margin_horizontal, canvas_margin_vertical + screen_width / 64);
   };
 
   var update_temperature_text = function() {
@@ -383,36 +386,83 @@ var sketch = function( p ) {
     screen_width = p.windowWidth; //window.innerWidth
     screen_height = p.windowHeight; //window.innerHeight
 
-    canvas_height = screen_height - 100;
-    canvas_width = Math.abs(canvas_height * (rightx - leftx) / (downy - upy));
+    canvas_height = screen_height * 0.9;
+    canvas_width = screen_width * 0.70;
+
+    if (canvas_width / canvas_height < Math.abs((rightx - leftx) / (downy - upy))) {
+      //margins on top and bottom
+      console.log('margins on top and bottom')
+      canvas_height = canvas_width * Math.abs((downy - upy) / (rightx - leftx))
+      canvas_margin_horizontal = 0
+
+      canvas_margin_vertical = (screen_height * 0.9 - canvas_height) / 2
+
+    } else {
+      //margins on right and left
+      console.log('margins on right and left')
+      canvas_width = canvas_height * Math.abs((rightx - leftx) / (downy - upy))
+      canvas_margin_vertical = 0.05 * screen_height - canvas_width / 100
+
+      canvas_margin_horizontal = (screen_width * 0.7 - canvas_width) / 2
+    }
 
     // dom
 
-    var stylebutton = (button, color) => {
-      button.style('font-family', 'Cabin Sketch')
-      button.style('font-size', '50px')
-      button.style('color', color)
-      button.style('outline', 'none')
-      button.style('border', 'none')
-      button.elt.style.width = '200px'
+    var style_element = (element, color) => {
+      element.style('font-family', 'Cabin Sketch')
+      element.style('font-size', `${screen_width / 32}px`)
+      element.style('color', color)
+      element.style('outline', 'none')
+      element.style('margin', '0')
+      element.style('border', 'none')
+      element.style('background-color', 'Transparent')
+      element.style('text-align', 'center')
+      element.elt.style.width = `${screen_width / 4}px`
     }
 
+    var style_button = (button) => {
+      button.style('text-shadow', '3px 7px rgba(0,0,0,0.15)')
+    }
+
+    sketchy_title = p.createP();
+    sketchy_title.html('Sketchy');
+    sketchy_title.position(0, screen_height * 0.05);
+    style_element(sketchy_title, '#e4be6c')
+    sketchy_title.style("font-size", `${screen_width / 20}px`);
+
+    google_title = p.createP();
+    google_title.html('built with');
+    google_title.position(0, screen_height * 0.95 - screen_width * 1.07 / 16 - screen_width / 40);
+    style_element(google_title, '#00223b')
+    google_title.style("font-size", `${screen_width / 80}px`);
+    google_title.style('opacity', '0.7')
+
+    google_logo = p.createImg('./magenta.png')
+    google_logo.position(screen_width * 3 / 32, screen_height * 0.95 - screen_width * 1.07 / 16)
+
+    google_logo.elt.style.width = `${screen_width / 16}px`;
+    google_logo.style('opacity', '0.7')
+
+
     reset_button = p.createButton('new');
-    reset_button.position(50, screen_height * 0.2 - 25);
+    reset_button.position(0, screen_height * 0.35 - 25);
     reset_button.mousePressed(reset_button_event); // attach button listener
-    stylebutton(reset_button, '#f176c3')
+    style_element(reset_button, '#f176c3')
+    style_button(reset_button)
 
     // random model buttom
     random_model_button = p.createButton('random');
-    random_model_button.position(50, screen_height * 0.5 - 25);
+    random_model_button.position(0, screen_height * 0.5 - 25);
     random_model_button.mousePressed(random_model_button_event); // attach button listener
-    stylebutton(random_model_button, '#7cdfff')
+    style_element(random_model_button, '#7cdfff')
+    style_button(random_model_button)
 
     // ai drawing
     ai_button = p.createButton('ai turn');
-    ai_button.position(50, screen_height * 0.8 - 25);
+    ai_button.position(0, screen_height * 0.65 - 25);
     ai_button.mousePressed(ai_button_event); // attach button listener
-    stylebutton(ai_button, '#91d832')
+    style_element(ai_button, '#91d832')
+    style_button(ai_button)
 
     // printing
     // print_button = p.createButton('print');
@@ -421,18 +471,16 @@ var sketch = function( p ) {
 
     //canvas =
     canvas = p.createCanvas(canvas_width, canvas_height);
-    canvas.canvas.style.border = 'dotted 10px #5a5655'
-    canvas_margin = Math.max(0, (screen_width - canvas_width - 220) / 2)
-    canvas.canvas.style.margin = `40px ${220 + canvas_margin}px ${canvas_margin}px`
+    canvas.canvas.style.border = `dotted ${canvas_width / 100}px #5a5858`
+    canvas.canvas.style.margin = `${canvas_margin_vertical}px ${canvas_margin_horizontal}px 0px ${screen_width * 0.25 + canvas_margin_horizontal}px`
     // canvas.canvas.style.float = 'right'
     canvas.canvas.style.display = 'block'
 
     // title
     text_title = p.createP();
-    text_title.style("font-family", "Cabin Sketch");
-    text_title.style("font-size", "50px");
-    text_title.style("position", "absolute");
-    text_title.style("color", "#ff990a");
+    style_element(text_title, '#ff990a')
+    text_title.elt.style.width = `${canvas_width}px`
+
     set_title_text('draw '+model.info.name+'.');
 
     // turns
