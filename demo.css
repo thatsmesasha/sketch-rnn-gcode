@@ -1,0 +1,10 @@
+@font-face {
+  font-family: 'Cabin Sketch';
+  font-style: normal;
+  font-weight: bold;
+  src: local('CabinSketch Bold'), local('CabinSketch-Bold'), url('http://themes.googleusercontent.com/static/fonts/cabinsketch/v5/ki3SSN5HMOO0-IOLOj069BAPw1J91axKNXP_-QX9CC8.woff') format('woff');
+}
+
+#defaultCanvas0 {
+  border-radius: 255px 15px 225px 15px/15px 225px 15px 255px;
+}

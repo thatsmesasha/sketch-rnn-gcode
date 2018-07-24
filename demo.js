@@ -306,6 +306,7 @@ var sketch = function( p ) {
 
   // scaling coordinates
   var canvas_width, canvas_height;
+  var canvas_margin;
 
   var leftx = -325;
   var rightx = -81;
@@ -313,7 +314,7 @@ var sketch = function( p ) {
   var upy = -104;
   var downy = -288;
 
-  var topz = -70;
+  var topz = -65;
   var bottomz = -79;
 
   var slidergcode = 'G1 Z-5'
@@ -325,7 +326,7 @@ var sketch = function( p ) {
   var set_title_text = function(new_text) {
     title_text = new_text.split('_').join(' ');
     text_title.html(title_text);
-    text_title.position(screen_width/2-12*title_text.length/2+10, 0);
+    text_title.position(220+canvas_margin + canvas_width/2 - new_text.length * 11, 0);
   };
 
   var update_temperature_text = function() {
@@ -380,46 +381,62 @@ var sketch = function( p ) {
     screen_width = p.windowWidth; //window.innerWidth
     screen_height = p.windowHeight; //window.innerHeight
 
-    canvas_height = screen_height - 150;
+    canvas_height = screen_height - 100;
     canvas_width = Math.abs(canvas_height * (rightx - leftx) / (downy - upy));
 
     // dom
 
-    reset_button = p.createButton('clear drawing');
-    reset_button.position(screen_width * 0.3, screen_height-50);
+    var stylebutton = (button, color) => {
+      button.style('font-family', 'Cabin Sketch')
+      button.style('font-size', '50px')
+      button.style('color', color)
+      button.style('outline', 'none')
+      button.style('border', 'none')
+      button.elt.style.width = '200px'
+    }
+
+    reset_button = p.createButton('new');
+    reset_button.position(50, screen_height * 0.2 - 25);
     reset_button.mousePressed(reset_button_event); // attach button listener
-
-    // ai drawing
-    ai_button = p.createButton('ai turn');
-    ai_button.position(screen_width * 0.4, screen_height-50);
-    ai_button.mousePressed(ai_button_event); // attach button listener
-
-    // printing
-    print_button = p.createButton('print');
-    print_button.position(screen_width * 0.5, screen_height-50);
-    print_button.mousePressed(print_button_event); // attach button listener
+    stylebutton(reset_button, '#f176c3')
 
     // random model buttom
     random_model_button = p.createButton('random');
-    random_model_button.position(screen_width * 0.6, screen_height-50);
+    random_model_button.position(50, screen_height * 0.5 - 25);
     random_model_button.mousePressed(random_model_button_event); // attach button listener
+    stylebutton(random_model_button, '#7cdfff')
+
+    // ai drawing
+    ai_button = p.createButton('ai turn');
+    ai_button.position(50, screen_height * 0.8 - 25);
+    ai_button.mousePressed(ai_button_event); // attach button listener
+    stylebutton(ai_button, '#91d832')
+
+    // printing
+    print_button = p.createButton('print');
+    print_button.position(10, 10);
+    print_button.mousePressed(print_button_event); // attach button listener
+    // stylebutton(print_button, '#82BF56')
+
+    //canvas =
+    canvas = p.createCanvas(canvas_width, canvas_height);
+    canvas.canvas.style.border = 'dotted 10px #5a5655'
+    canvas_margin = Math.max(0, (screen_width - canvas_width - 220) / 2)
+    canvas.canvas.style.margin = `40px ${220 + canvas_margin}px ${canvas_margin}px`
+    // canvas.canvas.style.float = 'right'
+    canvas.canvas.style.display = 'block'
 
     // title
     text_title = p.createP();
-    text_title.style("font-family", "Courier New");
-    text_title.style("font-size", "20");
-    text_title.style("color", "#3393d1"); // ff990a
+    text_title.style("font-family", "Cabin Sketch");
+    text_title.style("font-size", "50px");
+    text_title.style("position", "absolute");
+    text_title.style("color", "#ff990a");
     set_title_text('draw '+model.info.name+'.');
 
     // turns
     ai_turn = false;
     human_turn = true;
-
-    //canvas =
-    canvas = p.createCanvas(canvas_width, canvas_height);
-    canvas.canvas.style.border = '1px solid black'
-    canvas.canvas.style.margin = '50px auto auto'
-    canvas.canvas.style.display = 'block'
 
 
     // drawing
@@ -706,7 +723,7 @@ var sketch = function( p ) {
 
       point = scalexy(x, y)
 
-      hand_trajectory.push(`G${lifted ? '0 ' : '1'} X${point.x} Y${point.y}${lifted ? '' : ' 500'}`)
+      hand_trajectory.push(`G${lifted ? '0 ' : '1'} X${point.x} Y${point.y}${lifted ? '' : ' F500'}`)
       if (prev_hand_pen_down == 0 && hand_pen_down == 1) {
         hand_trajectory.push(`G1 Z${bottomz} F1000`);
         lifted = false
