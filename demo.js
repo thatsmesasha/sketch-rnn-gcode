@@ -458,46 +458,51 @@ var sketch = function( p ) {
       pen = 1;
       if (just_finished_line) {
         // setTimeout(() => set_title_text(`draw ${model.info.name}.`), 50)
-        var current_raw_line_simple = DataTool.simplify_line(current_raw_line);
-        var idx, last_point, last_x, last_y;
+        set_title_text('wait...')
+        setTimeout(() => {
+          var current_raw_line_simple = DataTool.simplify_line(current_raw_line);
+          var idx, last_point, last_x, last_y;
 
-        if (current_raw_line_simple.length > 1) {
-          if (raw_lines.length === 0) {
-            last_x = start_x;
-            last_y = start_y;
+          if (current_raw_line_simple.length > 1) {
+            if (raw_lines.length === 0) {
+              last_x = start_x;
+              last_y = start_y;
+            } else {
+              idx = raw_lines.length-1;
+              last_point = raw_lines[idx][raw_lines[idx].length-1];
+              last_x = last_point[0];
+              last_y = last_point[1];
+            }
+            var stroke = DataTool.line_to_stroke(current_raw_line_simple, [last_x, last_y]);
+            raw_lines.push(current_raw_line_simple);
+            strokes = strokes.concat(stroke);
+
+            // initialize rnn:
+            encode_strokes(strokes);
+
+            // redraw simplified strokes
+            clear_screen();
+            // console.log(strokes, start_x, start_y)
+            print_job(stroke);
+            draw_example(strokes, start_x, start_y, line_color);
+
+            /*
+            p.stroke(line_color);
+            p.strokeWeight(2.0);
+            p.ellipse(x, y, 5, 5); // draw line connecting prev point to current point.
+            */
+
           } else {
-            idx = raw_lines.length-1;
-            last_point = raw_lines[idx][raw_lines[idx].length-1];
-            last_x = last_point[0];
-            last_y = last_point[1];
+            if (raw_lines.length === 0) {
+              has_started = false;
+            }
           }
-          var stroke = DataTool.line_to_stroke(current_raw_line_simple, [last_x, last_y]);
-          raw_lines.push(current_raw_line_simple);
-          strokes = strokes.concat(stroke);
+          set_title_text(`draw ${model.info.name}.`)
 
-          // initialize rnn:
-          encode_strokes(strokes);
+          current_raw_line = [];
+          just_finished_line = false;
 
-          // redraw simplified strokes
-          clear_screen();
-          // console.log(strokes, start_x, start_y)
-          print_job(stroke);
-          draw_example(strokes, start_x, start_y, line_color);
-
-          /*
-          p.stroke(line_color);
-          p.strokeWeight(2.0);
-          p.ellipse(x, y, 5, 5); // draw line connecting prev point to current point.
-          */
-
-        } else {
-          if (raw_lines.length === 0) {
-            has_started = false;
-          }
-        }
-
-        current_raw_line = [];
-        just_finished_line = false;
+        }, 50)
       }
 
       // have machine take over the drawing here:
@@ -673,6 +678,7 @@ var sketch = function( p ) {
 
   var random_model_button_event = function() {
     setTimeout(() => {
+      reset_button_event()
       var item = class_list[Math.floor(Math.random()*class_list.length)];
       var model_mode = "gen";
       console.log("user wants to change to model "+item);
