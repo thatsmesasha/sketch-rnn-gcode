@@ -21,242 +21,49 @@
 var sketch = function( p ) {
   "use strict";
 
-  var small_class_list = ['ant',
-    'antyoga',
-    'alarm_clock',
-    'ambulance',
+  var class_list = [
+    'ant',
     'angel',
+    'alarm clock',
     'backpack',
     'barn',
     'basket',
-    'bear',
     'bee',
-    'beeflower',
     'bicycle',
-    'bird',
     'book',
-    'brain',
-    'bridge',
-    'bulldozer',
-    'bus',
-    'butterfly',
     'cactus',
-    'calendar',
+    'calendar', // good
     'castle',
     'cat',
-    'catbus',
-    'catpig',
     'chair',
-    'couch',
     'crab',
-    'crabchair',
-    'crabrabbitfacepig',
-    'cruise_ship',
-    'diving_board',
-    'dog',
-    'dogbunny',
-    'dolphin',
-    'duck',
-    'elephant',
-    'elephantpig',
-    'eye',
+    'eye', // good
     'face',
     'fan',
-    'fire_hydrant',
-    'firetruck',
-    'flamingo',
     'flower',
-    'floweryoga',
-    'frog',
-    'frogsofa',
-    'garden',
-    'hand',
-    'hedgeberry',
-    'hedgehog',
+    'hedgehog', // good
     'helicopter',
-    'kangaroo',
     'key',
-    'lantern',
     'lighthouse',
-    'lion',
-    'lionsheep',
-    'lobster',
-    'map',
-    'mermaid',
-    'monapassport',
-    'monkey',
     'mosquito',
-    'octopus',
-    'owl',
     'paintbrush',
-    'palm_tree',
-    'parrot',
-    'passport',
+    'palm tree',
     'peas',
     'penguin',
     'pig',
-    'pigsheep',
     'pineapple',
-    'pool',
     'postcard',
-    'power_outlet',
-    'rabbit',
-    'rabbitturtle',
     'radio',
-    'radioface',
     'rain',
-    'rhinoceros',
-    'rifle',
-    'roller_coaster',
-    'sandwich',
-    'scorpion',
-    'sea_turtle',
     'sheep',
-    'skull',
-    'snail',
+    'snail', // good
     'snowflake',
-    'speedboat',
     'spider',
-    'squirrel',
-    'steak',
-    'stove',
-    'strawberry',
-    'swan',
-    'swing_set',
-    'the_mona_lisa',
-    'tiger',
+    'strawberry', // good
     'toothbrush',
-    'toothpaste',
-    'tractor',
-    'trombone',
     'truck',
-    'whale',
-    'windmill',
-    'yoga',
-    'yogabicycle'];
-
-  var large_class_list = ['ant',
-    'ambulance',
-    'angel',
-    'alarm_clock',
-    'antyoga',
-    'backpack',
-    'barn',
-    'basket',
-    'bear',
-    'bee',
-    'beeflower',
-    'bicycle',
-    'bird',
-    'book',
-    'brain',
-    'bridge',
-    'bulldozer',
-    'bus',
-    'butterfly',
-    'cactus',
-    'calendar',
-    'castle',
-    'cat',
-    'catbus',
-    'catpig',
-    'chair',
-    'couch',
-    'crab',
-    'crabchair',
-    'crabrabbitfacepig',
-    'cruise_ship',
-    'diving_board',
-    'dog',
-    'dogbunny',
-    'dolphin',
-    'duck',
-    'elephant',
-    'elephantpig',
-    'everything',
-    'eye',
-    'face',
-    'fan',
-    'fire_hydrant',
-    'firetruck',
-    'flamingo',
-    'flower',
-    'floweryoga',
-    'frog',
-    'frogsofa',
-    'garden',
-    'hand',
-    'hedgeberry',
-    'hedgehog',
-    'helicopter',
-    'kangaroo',
-    'key',
-    'lantern',
-    'lighthouse',
-    'lion',
-    'lionsheep',
-    'lobster',
-    'map',
-    'mermaid',
-    'monapassport',
-    'monkey',
-    'mosquito',
-    'octopus',
-    'owl',
-    'paintbrush',
-    'palm_tree',
-    'parrot',
-    'passport',
-    'peas',
-    'penguin',
-    'pig',
-    'pigsheep',
-    'pineapple',
-    'pool',
-    'postcard',
-    'power_outlet',
-    'rabbit',
-    'rabbitturtle',
-    'radio',
-    'radioface',
-    'rain',
-    'rhinoceros',
-    'rifle',
-    'roller_coaster',
-    'sandwich',
-    'scorpion',
-    'sea_turtle',
-    'sheep',
-    'skull',
-    'snail',
-    'snowflake',
-    'speedboat',
-    'spider',
-    'squirrel',
-    'steak',
-    'stove',
-    'strawberry',
-    'swan',
-    'swing_set',
-    'the_mona_lisa',
-    'tiger',
-    'toothbrush',
-    'toothpaste',
-    'tractor',
-    'trombone',
-    'truck',
-    'whale',
-    'windmill',
-    'yoga',
-    'yogabicycle'];
-
-  var use_large_models = true;
-
-  var class_list = small_class_list;
-
-  if (use_large_models) {
-    class_list = large_class_list;
-  }
+    'windmill', // good
+  ];
 
   // sketch_rnn model
   var model;
@@ -310,6 +117,8 @@ var sketch = function( p ) {
   var started_printing;
   var x_print, y_print;
 
+  var ai_icon, white_screen;
+
   // scaling coordinates
 
   var leftx = -325;
@@ -319,25 +128,23 @@ var sketch = function( p ) {
   var downy = -288;
 
   var abovetopz = -5;
-  var topz = -70;
-  var bottomz = -79;
+  var topz = -65;
+  var bottomz = -79.5;
 
-  var slider_gcode = `G1 Z${abovetopz} F2000\nG0 X-342 Y-340\nG1 Z-61 F2000\nG1 X-72 F4000\nG1 X-342 F4000\nG1 Z${abovetopz} F2000`
+  var slider_gcode = `G1 Z${abovetopz} F2000\nG0 X-340 Y-340\nG1 Z-61 F2000\nG1 X-72 F4000\nG1 X-340 F4000\nG1 Z${abovetopz} F2000`
 
   if (leftx == rightx || downy == upy) {
     throw Error(`Invalid coordinates: leftx: ${leftx} rightx: ${rightx} upy: ${upy} downy: ${downy}`)
   }
 
-  var set_title_text = function(new_text) {
+  var set_title_text = function(new_text, ai=false) {
     title_text = new_text.split('_').join(' ');
     text_title.html(title_text);
-    text_title.position(screen_width * 0.25 + canvas_margin_horizontal, canvas_margin_vertical + screen_width / 64);
-  };
-
-  var update_temperature_text = function() {
-    var the_color="rgba("+Math.round(255*temperature)+",0,"+255+",1)";
-    text_temperature.style("color", the_color); // ff990a
-    text_temperature.html(""+Math.round(temperature*100));
+    if (ai) {
+      text_title.position((screen_width - canvas_width) / 2, screen_height * 0.9);
+    } else {
+      text_title.position(screen_width * 0.25 + canvas_margin_horizontal, canvas_margin_vertical + screen_width / 64);
+    }
   };
 
   var draw_example = function(example, start_x, start_y, line_color) {
@@ -376,9 +183,7 @@ var sketch = function( p ) {
 
     // model
     ModelImporter.set_init_model(model_raw_data);
-    if (use_large_models) {
-      ModelImporter.set_model_url("https://storage.googleapis.com/quickdraw-models/sketchRNN/large_models/");
-    }
+    ModelImporter.set_model_url("http://localhost:3000/model");
     model_data = ModelImporter.get_model_data();
     model = new SketchRNN(model_data);
     model.set_pixel_factor(screen_scale_factor);
@@ -395,7 +200,7 @@ var sketch = function( p ) {
       canvas_height = canvas_width * Math.abs((downy - upy) / (rightx - leftx))
       canvas_margin_horizontal = 0
 
-      canvas_margin_vertical = (screen_height * 0.9 - canvas_height) / 2
+      canvas_margin_vertical = (screen_height - canvas_height) / 2 - canvas_width / 100
 
     } else {
       //margins on right and left
@@ -423,6 +228,14 @@ var sketch = function( p ) {
     var style_button = (button) => {
       button.style('text-shadow', '3px 7px rgba(0,0,0,0.15)')
     }
+
+    ai_icon = p.createImg('./ai.gif')
+    ai_icon.elt.id = 'ia_icon'
+
+    white_screen = p.createDiv('')
+    white_screen.elt.id = 'white_screen'
+
+    hide_ai_icon(false)
 
     sketchy_title = p.createP();
     sketchy_title.html('Sketchy');
@@ -480,6 +293,7 @@ var sketch = function( p ) {
     text_title = p.createP();
     style_element(text_title, '#ff990a')
     text_title.elt.style.width = `${canvas_width}px`
+    text_title.style('z-index', '3')
 
     set_title_text('draw '+model.info.name+'.');
 
@@ -487,6 +301,7 @@ var sketch = function( p ) {
     ai_turn = false;
     human_turn = true;
 
+    random_model_button_event()
 
     // drawing
     strokes = [];
@@ -602,6 +417,7 @@ var sketch = function( p ) {
 
   p.draw = function() {
     deviceEvent();
+    // console.log((new Date()).getMilliseconds())
     // record pen drawing from user:
     if (tracking.down && (tracking.x > 0) && tracking.y < (screen_height-60)) { // pen is touching the paper
       if (has_started == false) { // first time anything is written
@@ -641,6 +457,7 @@ var sketch = function( p ) {
     } else { // pen is above the paper
       pen = 1;
       if (just_finished_line) {
+        // setTimeout(() => set_title_text(`draw ${model.info.name}.`), 50)
         var current_raw_line_simple = DataTool.simplify_line(current_raw_line);
         var idx, last_point, last_x, last_y;
 
@@ -663,7 +480,7 @@ var sketch = function( p ) {
 
           // redraw simplified strokes
           clear_screen();
-          console.log(strokes, start_x, start_y)
+          // console.log(strokes, start_x, start_y)
           print_job(stroke);
           draw_example(strokes, start_x, start_y, line_color);
 
@@ -685,46 +502,83 @@ var sketch = function( p ) {
 
       // have machine take over the drawing here:
       if (ai_turn) {
+        ai_turn = false;
+
+
         var trajectory = []
-        do {
+        setTimeout(() => {
+          do {
 
-          model_pen_down = model_prev_pen[0];
-          model_pen_up = model_prev_pen[1];
-          model_pen_end = model_prev_pen[2];
+            model_pen_down = model_prev_pen[0];
+            model_pen_up = model_prev_pen[1];
+            model_pen_end = model_prev_pen[2];
 
-          model_state = model.update([model_dx, model_dy, model_pen_down, model_pen_up, model_pen_end], model_state);
-          model_pdf = model.get_pdf(model_state);
-          [model_dx, model_dy, model_pen_down, model_pen_up, model_pen_end] = model.sample(model_pdf, temperature);
-          trajectory.push([model_dx, model_dy, model_pen_down, model_pen_up, model_pen_end])
+            model_state = model.update([model_dx, model_dy, model_pen_down, model_pen_up, model_pen_end], model_state);
+            model_pdf = model.get_pdf(model_state);
+            [model_dx, model_dy, model_pen_down, model_pen_up, model_pen_end] = model.sample(model_pdf, temperature);
+            trajectory.push([model_dx, model_dy, model_pen_down, model_pen_up, model_pen_end])
 
-          if (model_pen_end === 1) {
-            console.log('Done!')
-            ai_turn = false;
-            console.log(trajectory)
-            print_job(trajectory)
-          } else {
+            if (model_pen_end === 1) {
+              console.log('Done!')
+              // console.log(trajectory)
+              print_job(trajectory)
+            } else {
 
-            // if (model_prev_pen[0] === 1) {
-            //
-            //   // draw line connecting prev point to current point.
-            //   p.stroke(predict_line_color);
-            //   p.strokeWeight(line_width);
-            //   p.line(model_x, model_y, model_x+model_dx, model_y+model_dy);
-            // }
+              if (model_prev_pen[0] === 1) {
 
-            model_prev_pen = [model_pen_down, model_pen_up, model_pen_end];
+                // draw line connecting prev point to current point.
+                p.stroke(predict_line_color);
+                p.strokeWeight(line_width);
+                p.line(model_x, model_y, model_x+model_dx, model_y+model_dy);
+              }
 
-            model_x += model_dx;
-            model_y += model_dy;
-          }
+              model_prev_pen = [model_pen_down, model_pen_up, model_pen_end];
 
-        } while (model_pen_end !== 1)
+              model_x += model_dx;
+              model_y += model_dy;
+            }
+
+          } while (model_pen_end !== 1)
+
+          draw_status_update()
+
+
+        }, 50)
 
       }
     }
     prev_pen = pen;
   };
 
+  var draw_status_update = () => {
+    var statustimer = setInterval(loop, 1000)
+
+    function loop() {
+      var xmlHttp = new XMLHttpRequest();
+      xmlHttp.onreadystatechange = function() {
+        if (xmlHttp.readyState == 4 && xmlHttp.status == 200 && xmlHttp.responseText == 'ok') {
+          clearInterval(statustimer)
+          hide_ai_icon()
+        }
+      }
+      xmlHttp.open("GET", 'http://localhost:3000/update', true);
+      xmlHttp.send()
+    }
+  }
+
+  var display_ai_icon = () => {
+    ai_icon.position((screen_width - ai_icon.elt.width) / 2, 0)
+    white_screen.position(0, 0)
+    set_title_text('AI is drawing...', true)
+  }
+
+  var hide_ai_icon = (set_text=true) => {
+    ai_icon.position(-9999, -9999)
+    white_screen.position(-9999, -9999)
+    if (set_text) {
+      set_title_text('beautiful!')
+    }
+  }
 
   var send_to_server = function(hand_trajectory) {
     var xhr = new XMLHttpRequest()
@@ -768,8 +622,6 @@ var sketch = function( p ) {
     if (!trajectory.length) {
       return;
     }
-
-    console.log('pj', trajectory, x_print, y_print)
 
     started_printing = true
 
@@ -836,13 +688,18 @@ var sketch = function( p ) {
   };
 
   var reset_button_event = function() {
-    send_to_server(slider_gcode)
-    restart();
-    clear_screen();
+    if (has_started) {
+      console.log('clearing screen...')
+      send_to_server(slider_gcode)
+      restart();
+      clear_screen();
+      set_title_text(`draw ${model.info.name}.`)
+    }
   };
 
   var ai_button_event = function() {
     ai_turn = true;
+    display_ai_icon()
   };
 
   var print_button_event = function() {
