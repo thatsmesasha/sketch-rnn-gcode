@@ -60,10 +60,10 @@ if (enablePrinter) {
   }
 
   var update = () => {
-    var statustimer = setInterval(loop, 5000)
+    var statustimer = setInterval(loop, 10000)
 
     function loop() {
-      if ((new Date()).getTime() - last_drawn.getTime() > 10000 && !positioned_back) {
+      if ((new Date()).getTime() - last_drawn.getTime() > 30000 && !positioned_back) {
         trajectory.push(...home_point)
         positioned_back = true
         drawnext()
