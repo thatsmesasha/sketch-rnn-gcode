@@ -672,19 +672,21 @@ var sketch = function( p ) {
   };
 
   var random_model_button_event = function() {
-    var item = class_list[Math.floor(Math.random()*class_list.length)];
-    var model_mode = "gen";
-    console.log("user wants to change to model "+item);
-    var call_back = function(new_model) {
-      model = new_model;
-      model.set_pixel_factor(screen_scale_factor);
-      encode_strokes(strokes);
-      clear_screen();
-      draw_example(strokes, start_x, start_y, line_color);
-      set_title_text('draw '+model.info.name+'.');
-    }
-    set_title_text('loading '+item+' model...');
-    ModelImporter.change_model(model, item, model_mode, call_back);
+    setTimeout(() => {
+      var item = class_list[Math.floor(Math.random()*class_list.length)];
+      var model_mode = "gen";
+      console.log("user wants to change to model "+item);
+      var call_back = function(new_model) {
+        model = new_model;
+        model.set_pixel_factor(screen_scale_factor);
+        encode_strokes(strokes);
+        clear_screen();
+        draw_example(strokes, start_x, start_y, line_color);
+        set_title_text('draw '+model.info.name+'.');
+      }
+      set_title_text('loading '+item+' model...');
+      ModelImporter.change_model(model, item, model_mode, call_back);
+    }, 50)
   };
 
   var reset_button_event = function() {
@@ -698,7 +700,7 @@ var sketch = function( p ) {
   };
 
   var ai_button_event = function() {
-    ai_turn = true;
+    setTimeout(() => { ai_turn = true; }, 50);
     display_ai_icon()
   };
 
